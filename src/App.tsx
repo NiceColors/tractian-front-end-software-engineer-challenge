@@ -1,7 +1,9 @@
+import RootLayout from "./components/ui/layout";
+
 export default function App() {
   return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+    <RootLayout>
+      Content
+    </RootLayout>
   )
 }
