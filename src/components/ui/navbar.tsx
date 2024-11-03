@@ -1,15 +1,10 @@
-import { useState } from "react";
-import { Logo } from "../icons/logo";
+import { useCompany } from "../../contexts/company-context";
+import { GoldIcon, Logo } from "../icons/icons";
 import { Button } from "./buttons";
-import { GoldIcon } from "../icons/gold";
 
 export default function Navbar() {
+    const { companies, changeCompany, company: activeCompany } = useCompany()
 
-    const [activeUnit, setActiveUnit] = useState("Apex Unit")
-
-    const unities = ["Apex Unit", "Tobias Unit", "Jaguar Unit"]
-
-    const handleUnitChange = (unit: string) => setActiveUnit(unit)
 
     return (
         <nav className="bg-blue-dark text-white">
@@ -18,9 +13,9 @@ export default function Navbar() {
                     <Logo />
                 </div>
                 <div className="flex space-x-3">
-                    {unities.map((unit, index) => (
-                        <Button key={index} active={unit === activeUnit} onClick={() => handleUnitChange(unit)} icon={<GoldIcon/>}>
-                            {unit}
+                    {companies.map((company, index) => (
+                        <Button key={index}  {...activeCompany && { active: company.id === activeCompany.id }} onClick={() => changeCompany(company)} icon={<GoldIcon />}>
+                            {company.name}
                         </Button>
                     ))}
                 </div>
