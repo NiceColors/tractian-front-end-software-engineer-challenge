@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Logo } from "../icons/logo";
-import { UnitButton } from "./buttons";
+import { Button } from "./buttons";
+import { GoldIcon } from "../icons/gold";
 
 export default function Navbar() {
 
@@ -18,9 +19,9 @@ export default function Navbar() {
                 </div>
                 <div className="flex space-x-3">
                     {unities.map((unit, index) => (
-                        <UnitButton key={index} active={unit === activeUnit} onClick={() => handleUnitChange(unit)}>
+                        <Button key={index} active={unit === activeUnit} onClick={() => handleUnitChange(unit)} icon={<GoldIcon/>}>
                             {unit}
-                        </UnitButton>
+                        </Button>
                     ))}
                 </div>
             </div>

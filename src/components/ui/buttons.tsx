@@ -1,26 +1,43 @@
-import clsx from "clsx"
-import { GoldIcon } from "../icons/gold"
+import clsx from "clsx";
 
-
-
-interface UnitButtonProps extends React.HTMLProps<HTMLButtonElement> {
-    children: React.ReactNode
-    active?: boolean
+interface ButtonProps extends Omit<React.HTMLProps<HTMLButtonElement>, 'size'> {
+    children?: React.ReactNode;
+    active?: boolean;
+    icon?: React.ReactNode;
+    variant?: "outline" | "solid";
+    size?: "sm" | "md" | "lg";
+    type?: "button" | "submit" | "reset" | undefined;
 }
 
-export const UnitButton = ({ children, active = false, type = "button", ...props }: UnitButtonProps) => {
-
-    const style = clsx(
-        "flex items-center justify-center gap-2 px-4 py-1.5 rounded-md",
-        "text-xs font-semibold",
+export const Button = ({
+    children,
+    icon,
+    active = false,
+    type = "button",
+    size = "sm",
+    variant = 'solid',
+    className,
+    ...props
+}: ButtonProps) => {
+    const buttonClasses = clsx(
+        "flex items-center justify-center gap-2 px-4 rounded-md font-semibold",
         "hover:bg-blue-light transition-colors duration-200",
-        active ? "bg-blue-500 text-white" : "bg-blue-900 text-slate-50"
-    )
+        {
+            "border border-gray-500 bg-transparent text-gray-600": variant === "outline",
+            "text-slate-50": variant === "solid",
+            "bg-blue-500 text-white": active,
+            "bg-blue-900": !active,
+            "text-xs py-1.5": size === "sm",
+            "text-sm py-1.5": size === "md",
+            "text-md py-1": size === "lg"
+        },
+        className
+    );
 
     return (
-        <button className={style} {...props} >
-            <GoldIcon />
+        <button type={type} className={buttonClasses} {...props}>
+            {icon}
             {children}
         </button>
-    )
-}
+    );
+};
