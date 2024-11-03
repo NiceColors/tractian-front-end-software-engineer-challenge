@@ -14,18 +14,15 @@ function validateURL(url: string): boolean {
 }
 
 function validateEnvVariables(): Env {
-    
-    const appUrl = import.meta.env.VITE_APP_URL;
-    if (!appUrl) {
-        throw new Error('VITE_APP_URL é obrigatória');
-    }
-    if (!validateURL(appUrl)) {
-        throw new Error('VITE_APP_URL deve ser uma URL válida');
-    }
 
     const apiUrl = import.meta.env.VITE_API_URL;
+
     if (!apiUrl || apiUrl.length < 1) {
         throw new Error('VITE_API_URL é obrigatória');
+    }
+
+    if (!validateURL(apiUrl)) {
+        throw new Error('VITE_API_URL deve ser uma URL válida');
     }
 
     return {
