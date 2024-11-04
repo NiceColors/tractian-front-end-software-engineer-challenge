@@ -5,6 +5,7 @@ import { AssetNode, LocationNode, TreeNode } from '../../types/tree';
 
 import { CriticalIcon, EnergyIcon } from '../icons/icons';
 import { Button } from "../ui/buttons";
+import { Tree } from '../ui/tree';
 
 
 
@@ -15,6 +16,9 @@ export default function HomePage() {
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
 
     const [type, setType] = useState<'critical_status' | 'sensor' | null>(null);
+
+    const [searchTerms, setSearchTerms] = useState<string>('');
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,7 +100,6 @@ export default function HomePage() {
     }, [company]);
 
 
-    console.log(treeData);
 
 
     return (
@@ -113,7 +116,7 @@ export default function HomePage() {
                         variant="outline"
                         icon={<EnergyIcon {...(type === 'sensor') && { fill: "#fff" }} />}
                         size={'lg'}
-                        onClick={() => setType('sensor')}
+                        // onClick={() => setType('sensor')}
                         active={type === 'sensor'}
                     >
                         Sensor de Energia
@@ -122,7 +125,7 @@ export default function HomePage() {
                         variant="outline"
                         icon={<CriticalIcon  {...(type === 'critical_status') && { fill: "#fff" }} />}
                         size={'lg'}
-                        onClick={() => setType('critical_status')}
+                        // onClick={() => setType('critical_status')}
                         active={type === 'critical_status'}
                     >
                         Crítico
@@ -131,7 +134,14 @@ export default function HomePage() {
             </nav>
             <div className="flex space-x-4 flex-1 min-h-0 max-h-full">
                 <div className="border border-gray-500 rounded-md h-full p-4 bg-white min-w-[480px] overflow-auto">
-
+                    <Tree
+                        data={treeData}
+                        filters={{
+                            critical: type === 'critical_status',
+                            energy: type === 'sensor',
+                            search: searchTerms
+                        }}
+                    />
                 </div>
                 <div className="border border-gray-500 rounded-md h-full p-4 bg-white w-full">
 
