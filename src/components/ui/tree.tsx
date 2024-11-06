@@ -127,75 +127,83 @@ export default function Tree({ data, filters }: TreeProps) {
     const hasChildren = 'children' in node && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     const baseIndent = 20;
-    const leftPadding = node.depth * baseIndent;
+    const pl = node.depth * baseIndent;
 
     return (
       <div
         style={{
           ...style,
-          paddingLeft: leftPadding + 'px',
+          paddingLeft: pl + 'px',
           height: '28px',
         }}
-        className="flex items-center "
       >
+
+
         {node.depth > 0 && Array.from({ length: node.depth }).map((_, i) => {
 
           if (!(i === node.depth - 1)) {
             return null;
           }
 
-            if ('sensorType' in node && node.sensorType) {
+
+          if (node.type !== 'location') {
             return (
               <div
-              key={i}
-              className="absolute w-[1px] bg-gray-200"
-              style={{
-                left: `${i * baseIndent + 26}px`,
-                top: '-4px',
-                bottom: 0,
-                height: node.isLastChild ? '18px' : '100%',
-              }}
+                key={i}
+                className={"absolute w-[1px] bg-gray-200"}
+                style={{
+                  left: `${i * baseIndent + 26}px`,
+                  top: '-4px',
+                  bottom: 0,
+                  height: node.isLastChild ? (hasChildren ? '30%' : '20px') : '100%',
+                }}
               />
             );
-            }
-          })}
+          }
+        })}
 
-          {node.depth > 0 && 'sensorType' in node && node.sensorType && (
-            <div
+        {node.depth > 0 && 'sensorType' in node && node.sensorType && (
+          <div
             className="absolute h-[1px] bg-gray-200"
             style={{
               left: `${(node.depth - 1) * baseIndent + 26}px`,
-              width: '12px',
+              width: '10px',
               top: '14px',
             }}
-            />
-          )}
+          />
+        )}
 
         <div className="flex items-center gap-0">
           {hasChildren ? (
-            <button
-              onClick={() => toggleNode(node.id)}
-              className="overflow-hidden z-20 w-4 h-4 flex items-center justify-center hover:bg-gray-100 rounded"
-            >
-              {isExpanded ? (
-                <ChevronDown />
-              ) : (
-                <ChevronRight />
-              )}
-            </button>
+            <>
+
+              <button
+                onClick={() => toggleNode(node.id)}
+                className="z-20 w-4 h-4 flex items-center justify-center hover:bg-gray-100 rounded"
+              >
+                {isExpanded ? (
+                  <ChevronDown />
+                ) : (
+                  <ChevronRight />
+                )}
+              </button>
+
+            </>
+
           ) : (
-            (<span className="w-4" />)
+            (<span className="ml-4" />)
           )}
-          <span className="flex items-center justify-center relative">
+          <span className="flex items-center justify-center">
             {getNodeIcon(node)}
+            <span className="ml-1 truncate">{node.name}</span>
+            {'status' in node && node.status === 'alert' && (
+              <div className="ml-2 bg-red-500 h-2 w-2 rounded-full" />
+            )}
+            {'sensorType' in node && node.sensorType === 'energy' && (
+              <BoltIcon className="ml-2" />
+            )}
           </span>
-          <span className="ml-1">{node.name}</span>
-          {'status' in node && node.status === 'alert' && (
-            <div className="ml-2 bg-red-500 h-2 w-2 rounded-full" />
-          )}
-          {'sensorType' in node && node.sensorType === 'energy' && (
-            <BoltIcon className="ml-2" />
-          )}
+
         </div>
       </div>
     );
@@ -204,11 +212,11 @@ export default function Tree({ data, filters }: TreeProps) {
   return (
     <List
       ref={listRef}
-      height={720}
+      height={700}
       itemCount={flattenedData.length}
       itemSize={28}
       width="100%"
-      className="overflow-x-hidden"
+      className="overflow-x-hidden "
     >
       {renderRow}
     </List>
