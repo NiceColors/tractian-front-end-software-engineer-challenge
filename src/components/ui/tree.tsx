@@ -1,9 +1,43 @@
-import React, { useState } from 'react';
-import { AssetNode, TreeNode, TreeProps } from '../../types/tree';
-import { AssetIcon, ChevronDown, ChevronRight, ComponentIcon, CriticalIcon, LocationIcon } from '../icons/icons';
+import { useEffect, useRef, useState } from 'react';
+import { FixedSizeList as List } from 'react-window';
+import { TreeNode, TreeProps } from '../../types/tree';
+import { AssetIcon, BoltIcon, ChevronDown, ChevronRight, ComponentIcon, LocationIcon } from '../icons/icons';
 
-export const Tree: React.FC<TreeProps> = ({ data, filters }) => {
+type FlattenedNode = TreeNode & {
+  depth: number;
+  isLastChild: boolean;
+  isFirstChild: boolean;
+  parentLastChildren: boolean[];
+}
+
+export default function Tree({ data, filters }: TreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [flattenedData, setFlattenedData] = useState<FlattenedNode[]>([]);
+  const listRef = useRef<List>(null);
+
+  useEffect(() => {
+    if (filters.search || filters.status) {
+      const allNodeIds = new Set<string>();
+      const addNodeIds = (nodes: TreeNode[]) => {
+        nodes.forEach(node => {
+          allNodeIds.add(node.id);
+          if ('children' in node && node.children) {
+            addNodeIds(node.children);
+          }
+        });
+      };
+      addNodeIds(data);
+      setExpandedNodes(allNodeIds);
+    } else {
+      setExpandedNodes(new Set());
+    }
+  }, [filters, data]);
+
+  useEffect(() => {
+    const filteredData = filterTree(data);
+    const flattened = flattenTree(filteredData);
+    setFlattenedData(flattened);
+  }, [data, filters, expandedNodes]);
 
   const toggleNode = (nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -19,21 +53,17 @@ export const Tree: React.FC<TreeProps> = ({ data, filters }) => {
 
   const nodeMatchesFilters = (node: TreeNode): boolean => {
     const nameMatch = node.name.toLowerCase().includes(filters.search.toLowerCase());
-    const energyMatch = !filters.energy || (
-      node.type === 'component' &&
-      node.sensorType === 'energy'
-    );
-    const criticalMatch = !filters.critical || (
-      node.type === 'component' &&
-      node.status === 'alert'
-    );
-
+    const energyMatch = filters.status !== 'energy' || ('sensorType' in node && node.sensorType === 'energy');
+    const criticalMatch = filters.status !== 'alert' || ('status' in node && node.status === 'alert');
     return nameMatch && energyMatch && criticalMatch;
   };
 
   const hasMatchingDescendant = (node: TreeNode): boolean => {
     if (nodeMatchesFilters(node)) return true;
-    return node.children.some(child => hasMatchingDescendant(child));
+    if ('children' in node) {
+      return node.children.some(child => hasMatchingDescendant(child));
+    }
+    return false;
   };
 
   const filterTree = (nodes: TreeNode[]): TreeNode[] => {
@@ -41,7 +71,7 @@ export const Tree: React.FC<TreeProps> = ({ data, filters }) => {
       if (hasMatchingDescendant(node)) {
         const filteredNode = {
           ...node,
-          children: filterTree(node.children)
+          children: 'children' in node ? filterTree(node.children) : []
         };
         acc.push(filteredNode);
       }
@@ -49,58 +79,138 @@ export const Tree: React.FC<TreeProps> = ({ data, filters }) => {
     }, []);
   };
 
-  const getNodeIcon = (node: (TreeNode | AssetNode)) => {
+  const flattenTree = (
+    nodes: TreeNode[],
+    depth = 0,
+    parentLastChildren: boolean[] = []
+  ): FlattenedNode[] => {
+    return nodes.reduce<FlattenedNode[]>((acc, node, index) => {
+      const isLast = index === nodes.length - 1;
+      const isFirst = index === 0;
 
+      const flatNode: FlattenedNode = {
+        ...node,
+        depth,
+        isLastChild: isLast,
+        isFirstChild: isFirst,
+        parentLastChildren: [...parentLastChildren, isLast]
+      };
 
-    if ('sensorType' in node && !!node.sensorType)
+      acc.push(flatNode);
+
+      if ('children' in node && node.children && expandedNodes.has(node.id)) {
+        acc.push(...flattenTree(
+          node.children,
+          depth + 1,
+          [...parentLastChildren, isLast]
+        ));
+      }
+
+      return acc;
+    }, []);
+  };
+
+  const getNodeIcon = (node: FlattenedNode) => {
+    if ('sensorType' in node && node.sensorType)
       return <ComponentIcon />;
 
-    switch ((node as TreeNode).type) {
+    switch (node.type) {
       case 'location':
         return <LocationIcon />;
       default:
         return <AssetIcon />;
-
     }
   };
 
-  const renderNode = (node: TreeNode) => {
-
-    const hasChildren = node.children.length > 0;
+  const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const node = flattenedData[index];
+    const hasChildren = 'children' in node && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
+    const baseIndent = 20;
+    const leftPadding = node.depth * baseIndent;
 
     return (
-      <div key={node.id} className="ml-4">
-        <div className="flex items-center py-1">
+      <div
+        style={{
+          ...style,
+          paddingLeft: leftPadding + 'px',
+          height: '28px',
+        }}
+        className="flex items-center "
+      >
+        {node.depth > 0 && Array.from({ length: node.depth }).map((_, i) => {
+
+          if (!(i === node.depth - 1)) {
+            return null;
+          }
+
+            if ('sensorType' in node && node.sensorType) {
+            return (
+              <div
+              key={i}
+              className="absolute w-[1px] bg-gray-200"
+              style={{
+                left: `${i * baseIndent + 26}px`,
+                top: '-4px',
+                bottom: 0,
+                height: node.isLastChild ? '18px' : '100%',
+              }}
+              />
+            );
+            }
+          })}
+
+          {node.depth > 0 && 'sensorType' in node && node.sensorType && (
+            <div
+            className="absolute h-[1px] bg-gray-200"
+            style={{
+              left: `${(node.depth - 1) * baseIndent + 26}px`,
+              width: '12px',
+              top: '14px',
+            }}
+            />
+          )}
+
+        <div className="flex items-center gap-0">
           {hasChildren ? (
             <button
               onClick={() => toggleNode(node.id)}
-              className="mr-2 hover:bg-gray-100 rounded p-0.5"
+              className="overflow-hidden z-20 w-4 h-4 flex items-center justify-center hover:bg-gray-100 rounded"
             >
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {isExpanded ? (
+                <ChevronDown />
+              ) : (
+                <ChevronRight />
+              )}
             </button>
-          ) : (<div className="w-7" />)}
-
-          <span className="mr-2 w-6">{getNodeIcon(node)}</span>
-          <span className="text-sm">{node.name}</span>
-          {node.type === 'component' && node.status === 'alert' && (
-            <CriticalIcon className="ml-2 text-red-500 h-4 w-4" />
+          ) : (
+            (<span className="w-4" />)
+          )}
+          <span className="flex items-center justify-center relative">
+            {getNodeIcon(node)}
+          </span>
+          <span className="ml-1">{node.name}</span>
+          {'status' in node && node.status === 'alert' && (
+            <div className="ml-2 bg-red-500 h-2 w-2 rounded-full" />
+          )}
+          {'sensorType' in node && node.sensorType === 'energy' && (
+            <BoltIcon className="ml-2" />
           )}
         </div>
-        {hasChildren && isExpanded && (
-          <div className="ml-4">
-            {node.children.map(child => renderNode(child))}
-          </div>
-        )}
       </div>
     );
   };
 
-  const filteredData = filterTree(data);
-
   return (
-    <div className="min-h-0 overflow-auto">
-      {filteredData.map(node => renderNode(node))}
-    </div>
+    <List
+      ref={listRef}
+      height={720}
+      itemCount={flattenedData.length}
+      itemSize={28}
+      width="100%"
+      className="overflow-x-hidden"
+    >
+      {renderRow}
+    </List>
   );
-};
+}

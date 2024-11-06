@@ -1,5 +1,5 @@
-type SensorType = 'energy' | 'vibration';
-type Status = 'operating' | 'alert';
+export type SensorType = 'energy' | 'vibration' | null
+export type Status = 'operating' | 'alert' | 'critical' | null;
 
 export type BaseNode = {
     id: string;
@@ -33,7 +33,6 @@ export type TreeProps = {
     data: TreeNode[];
     filters: {
         search: string;
-        energy: boolean;
-        critical: boolean;
+        status: Status | SensorType;
     };
 }
