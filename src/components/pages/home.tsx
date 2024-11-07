@@ -29,6 +29,7 @@ export default function HomePage() {
         setFilteredData([]);
         setFilterStatus(null);
         setSearchTerms('');
+        setSelectedNode(null);
     }
 
     useEffect(() => {
