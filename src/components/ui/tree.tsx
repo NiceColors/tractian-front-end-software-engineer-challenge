@@ -6,10 +6,10 @@ import {
   ComponentIcon,
   LocationIcon,
 } from "@/components/icons";
+import { TreeNode, TreeProps } from "@/types/tree";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
-import { TreeNode, TreeProps } from "@/types/tree";
 
 type FlattenedNode = TreeNode & {
   depth: number;
@@ -228,21 +228,20 @@ export default function Tree({ data, filters, onSelectNode }: TreeProps) {
           )}
           <span
             className={clsx("flex items-center justify-start w-full", {
-              "group hover:bg-blue-500 hover:text-white cursor-pointer rounded-sm":
+              "group cursor-pointer rounded-sm":
                 isAssetWithSensorType,
-              "bg-blue-500 text-white cursor-pointer rounded-sm stroke-white":
-                selectedNode?.id === node.id,
+              "bg-blue-500 text-white cursor-pointer rounded-sm stroke-white relative right-1":
+                selectedNode?.id === node.id && isAssetWithSensorType,
             })}
             onClick={() => {
               onSelectNode && onSelectNode(node);
-              setSelectedNode(node);
-              console.log(node);
+              setSelectedNode(prev => prev?.id === node.id ? null : node)
             }}
           >
             {isAssetWithSensorType ? (
               <ComponentIcon
-                className={clsx("group-hover:stroke-white ml-1", {
-                  "stroke-white": selectedNode?.id === node.id,
+                className={clsx({
+                  "stroke-white ml-1": selectedNode?.id === node.id,
                 })}
               />
             ) : (
