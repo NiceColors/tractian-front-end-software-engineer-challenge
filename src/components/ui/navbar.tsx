@@ -1,5 +1,5 @@
-import { useCompany } from "../../contexts/company-context";
-import { GoldIcon, Logo } from "../icons/icons";
+import { GoldIcon, Logo } from "@/components/icons";
+import { useCompany } from "@/contexts/company-context";
 import { Button } from "./buttons";
 
 export default function Navbar() {

@@ -1,7 +1,3 @@
-import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
-import { FixedSizeList as List } from "react-window";
-import { TreeNode, TreeProps } from "../../types/tree";
 import {
   AssetIcon,
   BoltIcon,
@@ -9,7 +5,11 @@ import {
   ChevronRight,
   ComponentIcon,
   LocationIcon,
-} from "../icons/icons";
+} from "@/components/icons";
+import clsx from "clsx";
+import { useEffect, useRef, useState } from "react";
+import { FixedSizeList as List } from "react-window";
+import { TreeNode, TreeProps } from "@/types/tree";
 
 type FlattenedNode = TreeNode & {
   depth: number;

@@ -1,5 +1,5 @@
+import { api } from "@/data/api";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { api } from "../data/api";
 
 
 interface Company {

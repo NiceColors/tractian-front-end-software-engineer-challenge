@@ -1,13 +1,13 @@
+import { useCompany } from "@/contexts/company-context";
+import { api } from '@/data/api';
+import { AssetNode, LocationNode, TreeNode } from '@/types/tree';
 import { debounce } from 'lodash';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useCompany } from "../../contexts/company-context";
-import { api } from '../../data/api';
-import { AssetNode, LocationNode, TreeNode } from '../../types/tree';
 import AssetDetails from '../assets-details';
-import { CriticalIcon, EnergyIcon } from '../icons/icons';
+import { CriticalIcon, EnergyIcon } from '../icons';
 import { Button } from '../ui/buttons';
 import { LoadingPage } from '../ui/loading';
-const Tree = lazy(() => import('../../components/ui/tree'));
+const Tree = lazy(() => import('@/components/ui/tree'));
 
 export default function HomePage() {
 
@@ -146,7 +146,7 @@ export default function HomePage() {
     }
 
     return (
-    <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
+        <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
             <nav className="flex items-center justify-between py-0.5 mb-4" aria-label="Filtros e navegação">
                 <div className="flex gap-2 items-center text-sm text-neutral-400">
                     <a href="#" className="text-black text-xl font-semibold">Ativos</a>
