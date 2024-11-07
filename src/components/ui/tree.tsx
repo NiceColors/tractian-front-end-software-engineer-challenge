@@ -6,6 +6,7 @@ import {
   ComponentIcon,
   LocationIcon,
 } from "@/components/icons";
+import useWindowHeight from "@/hooks/useWindowHeight";
 import { TreeNode, TreeProps } from "@/types/tree";
 import clsx from "clsx";
 import { memo, useEffect, useRef, useState } from "react";
@@ -89,6 +90,9 @@ const flattenTree = (
 
 
 export default memo(function Tree({ data, filters, onSelectNode }: TreeProps) {
+
+  const height = useWindowHeight();
+
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [flattenedData, setFlattenedData] = useState<FlattenedNode[]>([]);
   const listRef = useRef<List>(null);
@@ -348,11 +352,12 @@ export default memo(function Tree({ data, filters, onSelectNode }: TreeProps) {
     <div role="tree" aria-label="Árvore de ativos">
       <List
         ref={listRef}
-        height={700}
+        layout="vertical"
+        height={height - 230}
         itemCount={flattenedData.length}
         itemSize={28}
         width="100%"
-        className="overflow-x-hidden "
+        className="overflow-hidden"
       >
         {renderRow}
       </List>

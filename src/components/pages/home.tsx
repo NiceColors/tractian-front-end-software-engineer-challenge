@@ -3,9 +3,9 @@ import { CriticalIcon, EnergyIcon } from '@/components/icons';
 import { Button } from '@/components/ui/buttons';
 import { LoadingPage } from '@/components/ui/loading';
 import { useCompany } from "@/contexts/company-context";
+import useDebounce from '@/hooks/useDebounce';
 import { fetchCompanyData } from "@/services/fetch-company";
 import { TreeNode } from '@/types/tree';
-import { debounce } from 'lodash';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 const Tree = lazy(() => import('@/components/ui/tree'));
 
@@ -17,15 +17,11 @@ export default function HomePage() {
     const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
     const [filterStatus, setFilterStatus] = useState<'energy' | 'alert' | null>(null);
     const [searchTerms, setSearchTerms] = useState<string>('');
+    const debouncedSearchTerm = useDebounce(searchTerms, 300);
 
     const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
 
-    const handleSearch = useCallback(
-        debounce((value: string) => {
-            setSearchTerms(value);
-        }, 300),
-        []
-    );
+    const handleSearch = useCallback((value: string) => setSearchTerms(value), []);
 
     useEffect(() => {
         if (company) {
@@ -38,7 +34,7 @@ export default function HomePage() {
 
     const applyFilters = useCallback((nodes: TreeNode[]): TreeNode[] => {
         const nodeMatchesFilters = (node: TreeNode) => {
-            const nameMatch = node.name.toLowerCase().includes(searchTerms.toLowerCase());
+            const nameMatch = node.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
             const energyMatch = filterStatus !== 'energy' || ('sensorType' in node && node.sensorType === 'energy');
             const criticalMatch = filterStatus !== 'alert' || ('status' in node && node.status === 'alert');
             return nameMatch && energyMatch && criticalMatch;
@@ -62,16 +58,16 @@ export default function HomePage() {
             }
             return acc;
         }, []);
-    }, [filterStatus, searchTerms]);
+    }, [filterStatus, debouncedSearchTerm]);
 
     useEffect(() => {
-        if (!filterStatus && !searchTerms) {
+        if (!filterStatus && !debouncedSearchTerm) {
             setFilteredData(treeData);
         } else {
             const filteredNodes = applyFilters(treeData);
             setFilteredData(filteredNodes);
         }
-    }, [filterStatus, searchTerms, treeData, applyFilters]);
+    }, [filterStatus, debouncedSearchTerm, treeData, applyFilters]);
 
 
     if (!company) {
@@ -83,8 +79,8 @@ export default function HomePage() {
     }
 
     return (
-        <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
-            <nav className="flex items-center justify-between py-0.5 mb-4" aria-label="Filtros e navegação">
+        <div className="border border-gray-500 rounded-md flex-1 min-h-0 p-4 bg-white flex flex-col">
+            <nav className="flex items-center justify-between py-0.5 mb-4 " aria-label="Filtros e navegação">
                 <div className="flex gap-2 items-center text-sm text-neutral-400">
                     <a href="#" className="text-black text-xl font-semibold">Ativos</a>
                     <span aria-hidden="true">/</span>
@@ -116,7 +112,7 @@ export default function HomePage() {
                 </div>
             </nav>
 
-            <div className="flex space-x-4 flex-1 min-h-0 max-h-[760px]">
+            <div className="flex space-x-4">
                 <div className="border border-gray-500 rounded-md h-full bg-white lg:max-w-[480px] w-full">
                     <div className='border-b bg-transparent border-gray-300'>
                         <label htmlFor="search-input" className="sr-only">Buscar Ativo ou Local</label>
@@ -135,14 +131,14 @@ export default function HomePage() {
                                 data={filteredData}
                                 filters={{
                                     status: filterStatus,
-                                    search: searchTerms
+                                    search: debouncedSearchTerm
                                 }}
                                 onSelectNode={setSelectedNode}
                             />
                         </Suspense>
                     </div>
                 </div>
-                <div className="border border-gray-500 rounded-md h-full bg-white w-full">
+                <div className="border border-gray-500 rounded-md overflow-hidden bg-white w-full">
                     <AssetDetails node={selectedNode} />
                 </div>
             </div>
