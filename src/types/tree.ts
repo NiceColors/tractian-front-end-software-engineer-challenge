@@ -35,4 +35,5 @@ export type TreeProps = {
         search: string;
         status: Status | SensorType;
     };
+    onSelectNode?: (node: TreeNode) => void;
 }

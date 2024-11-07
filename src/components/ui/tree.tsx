@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { TreeNode, TreeProps } from '../../types/tree';
@@ -10,10 +11,11 @@ type FlattenedNode = TreeNode & {
   parentLastChildren: boolean[];
 }
 
-export default function Tree({ data, filters }: TreeProps) {
+export default function Tree({ data, filters, onSelectNode }: TreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [flattenedData, setFlattenedData] = useState<FlattenedNode[]>([]);
   const listRef = useRef<List>(null);
+
 
   useEffect(() => {
     if (filters.search || filters.status) {
@@ -110,15 +112,13 @@ export default function Tree({ data, filters }: TreeProps) {
     }, []);
   };
 
-  const getNodeIcon = (node: FlattenedNode) => {
-    if ('sensorType' in node && node.sensorType)
-      return <ComponentIcon />;
+  const getNodeType = (node: FlattenedNode) => {
 
     switch (node.type) {
       case 'location':
-        return <LocationIcon />;
+        return <LocationIcon aria-label="Localização" />;
       default:
-        return <AssetIcon />;
+        return <AssetIcon aria-label="Ativo" />;
     }
   };
 
@@ -128,6 +128,7 @@ export default function Tree({ data, filters }: TreeProps) {
     const isExpanded = expandedNodes.has(node.id);
     const baseIndent = 20;
     const pl = node.depth * baseIndent;
+    const isAssetWithSensorType = 'sensorType' in node && node.sensorType;
 
     return (
       <div
@@ -136,6 +137,16 @@ export default function Tree({ data, filters }: TreeProps) {
           paddingLeft: pl + 'px',
           height: '28px',
         }}
+
+        key={node.id}
+        id={`tree-node-${node.id}`}
+
+        role="treeitem"
+        aria-expanded={hasChildren ? isExpanded : undefined}
+        aria-level={node.depth + 1}
+        aria-setsize={flattenedData.length}
+        aria-posinset={index + 1}
+
       >
 
 
@@ -162,7 +173,7 @@ export default function Tree({ data, filters }: TreeProps) {
           }
         })}
 
-        {node.depth > 0 && 'sensorType' in node && node.sensorType && (
+        {node.depth > 0 && isAssetWithSensorType && (
           <div
             className="absolute h-[1px] bg-gray-200"
             style={{
@@ -180,27 +191,36 @@ export default function Tree({ data, filters }: TreeProps) {
               <button
                 onClick={() => toggleNode(node.id)}
                 className="z-20 w-4 h-4 flex items-center justify-center hover:bg-gray-100 rounded"
+                aria-label={isExpanded ? "Recolher" : "Expandir"}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleNode(node.id);
+                  }
+                }}
               >
-                {isExpanded ? (
-                  <ChevronDown />
-                ) : (
-                  <ChevronRight />
-                )}
+                {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
               </button>
 
             </>
 
           ) : (
-            (<span className="ml-4" />)
+            (<span className="ml-4" aria-hidden="true" />)
           )}
-          <span className="flex items-center justify-center">
-            {getNodeIcon(node)}
+          <span
+            className={clsx(
+              "flex items-center justify-start w-full",
+              { 'group hover:bg-blue-500 hover:text-white cursor-pointer rounded-sm': isAssetWithSensorType }
+            )}
+            {...onSelectNode && { onClick: () => onSelectNode(node) }}
+          >
+            {isAssetWithSensorType ? <ComponentIcon className="group-hover:stroke-white ml-1" /> : getNodeType(node)}
             <span className="ml-1 truncate">{node.name}</span>
             {'status' in node && node.status === 'alert' && (
-              <div className="ml-2 bg-red-500 h-2 w-2 rounded-full" />
+              <div className="ml-2 bg-red-500 h-2 w-2 rounded-full" aria-label="Status crítico" />
             )}
-            {'sensorType' in node && node.sensorType === 'energy' && (
-              <BoltIcon className="ml-2" />
+            {isAssetWithSensorType === 'energy' && (
+              <BoltIcon className="ml-2" aria-label="Sensor de energia" />
             )}
           </span>
 
@@ -209,16 +229,23 @@ export default function Tree({ data, filters }: TreeProps) {
     );
   };
 
+
   return (
-    <List
-      ref={listRef}
-      height={700}
-      itemCount={flattenedData.length}
-      itemSize={28}
-      width="100%"
-      className="overflow-x-hidden "
+    <div
+      role="tree"
+      aria-label="Árvore de ativos"
     >
-      {renderRow}
-    </List>
+      <List
+        ref={listRef}
+        height={700}
+        itemCount={flattenedData.length}
+        itemSize={28}
+        width="100%"
+        className="overflow-x-hidden "
+      >
+        {renderRow}
+      </List>
+    </div>
+
   );
 }
