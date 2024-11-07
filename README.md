@@ -41,9 +41,6 @@ Algumas áreas que poderiam ser melhoradas com mais tempo / detalhes sobre o req
 2. Adição de mais opções de filtragem e ordenação.
 3. Implementação de cache para melhorar o tempo de carregamento de dados frequentemente acessados.
 
-## Contato
-Email: victorbtst77@gmail.com
-
 ## Tecnologias Utilizadas
 
 - React
@@ -93,6 +90,7 @@ O projeto é composto principalmente por dois componentes principais:
 
 4. Abra o navegador e acesse `http://localhost:5173/`
 
-
+## Contato
+Email: victorbtst77@gmail.com
 
 
