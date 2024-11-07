@@ -4,6 +4,9 @@
 
 Aplicação de visualização em árvore para ativos industriais, permitindo aos usuários explorar e filtrar uma hierarquia complexa de locais, ativos e componentes 
 
+## Demonstração
+https://github.com/user-attachments/assets/d28ad805-9205-42a0-ac63-46a6967a266a
+
 ## Funcionalidades
 
 1. **Visualização em Árvore**:
@@ -37,9 +40,6 @@ Algumas áreas que poderiam ser melhoradas com mais tempo / detalhes sobre o req
 1. Implementação de testes e-2-e e unitários.
 2. Adição de mais opções de filtragem e ordenação.
 3. Implementação de cache para melhorar o tempo de carregamento de dados frequentemente acessados.
-
-## Demonstração
-https://github.com/user-attachments/assets/d28ad805-9205-42a0-ac63-46a6967a266a
 
 ## Contato
 Email: victorbtst77@gmail.com
