@@ -1,14 +1,16 @@
 import { debounce } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useCompany } from "../../contexts/company-context";
 import { api } from '../../data/api';
 import { AssetNode, LocationNode, TreeNode } from '../../types/tree';
 import AssetDetails from '../assets-details';
 import { CriticalIcon, EnergyIcon } from '../icons/icons';
 import { Button } from '../ui/buttons';
-import Tree from '../ui/tree';
+import { LoadingPage } from '../ui/loading';
+const Tree = lazy(() => import('../../components/ui/tree'));
 
 export default function HomePage() {
+
     const { company } = useCompany();
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
     const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
@@ -144,20 +146,22 @@ export default function HomePage() {
     }
 
     return (
-        <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
-            <nav className="flex items-center justify-between py-0.5 mb-4">
+    <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
+            <nav className="flex items-center justify-between py-0.5 mb-4" aria-label="Filtros e navegação">
                 <div className="flex gap-2 items-center text-sm text-neutral-400">
                     <a href="#" className="text-black text-xl font-semibold">Ativos</a>
-                    <span>/</span>
+                    <span aria-hidden="true">/</span>
                     <span>{company.name}</span>
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center" role="group" aria-label="Filtros de ativos">
                     <Button
                         variant="outline"
                         icon={<EnergyIcon {...(filterStatus === 'energy' && { fill: "#fff" })} />}
                         size={'lg'}
                         onClick={() => setFilterStatus(filterStatus === 'energy' ? null : 'energy')}
                         active={filterStatus === 'energy'}
+                        aria-pressed={filterStatus === 'energy'}
+                        aria-label="Filtrar por sensor de energia"
                     >
                         Sensor de Energia
                     </Button>
@@ -167,6 +171,8 @@ export default function HomePage() {
                         size={'lg'}
                         onClick={() => setFilterStatus(filterStatus === 'alert' ? null : 'alert')}
                         active={filterStatus === 'alert'}
+                        aria-pressed={filterStatus === 'alert'}
+                        aria-label="Filtrar por status crítico"
                     >
                         Crítico
                     </Button>
@@ -176,15 +182,20 @@ export default function HomePage() {
             <div className="flex space-x-4 flex-1 min-h-0 max-h-[760px]">
                 <div className="border border-gray-500 rounded-md h-full bg-white lg:max-w-[480px] w-full">
                     <div className='border-b bg-transparent border-gray-300'>
+                        <label htmlFor="search-input" className="sr-only">Buscar Ativo ou Local</label>
                         <input
+                            id="search-input"
                             className='bg-transparent p-2 w-full'
                             type='text'
                             placeholder='Buscar Ativo ou Local'
                             onChange={(e) => handleSearch(e.target.value)}
+                            aria-label="Buscar Ativo ou Local"
                         />
                     </div>
-                    <div className="p-4">
-                        {memoizedTree}
+                    <div className="p-4" role="tree" aria-label="Árvore de ativos">
+                        <Suspense fallback={<LoadingPage />}>
+                            {memoizedTree}
+                        </Suspense>
                     </div>
                 </div>
                 <div className="border border-gray-500 rounded-md h-full p-4 bg-white w-full">
