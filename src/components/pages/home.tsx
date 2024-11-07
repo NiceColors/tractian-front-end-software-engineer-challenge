@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { debounce } from 'lodash';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCompany } from "../../contexts/company-context";
 import { api } from '../../data/api';
 import { AssetNode, LocationNode, TreeNode } from '../../types/tree';
 import AssetDetails from '../assets-details';
-import FilterBar from '../filter-bar';
+import { CriticalIcon, EnergyIcon } from '../icons/icons';
+import { Button } from '../ui/buttons';
 import Tree from '../ui/tree';
 
 export default function HomePage() {
@@ -13,16 +15,69 @@ export default function HomePage() {
     const [filterStatus, setFilterStatus] = useState<'energy' | 'alert' | null>(null);
     const [searchTerms, setSearchTerms] = useState<string>('');
 
+    const handleSearch = useCallback(
+        debounce((value: string) => {
+            setSearchTerms(value);
+        }, 300),
+        []
+    );
 
-    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fetchCompanyData = useCallback(async (companyId: string): Promise<TreeNode[]> => {
+        try {
+            const [assetsResponse, locationsResponse] = await Promise.all([
+                api(`/companies/${companyId}/assets`),
+                api(`/companies/${companyId}/locations`)
+            ]);
 
-        // talvez seja interessante criar um debounce para melhorar a performance caso o filtro seja feito pelo backend
+            if (!assetsResponse.ok || !locationsResponse.ok) {
+                throw new Error('Failed to fetch company data');
+            }
 
-        const value = event.target.value ?? ''
+            const [assetsData, locationsData] = await Promise.all([
+                assetsResponse.json(),
+                locationsResponse.json()
+            ]);
 
-        setSearchTerms(value);
+            const locationsMap = new Map<string, LocationNode>();
+            const assetsMap = new Map<string, AssetNode>();
 
-    }
+            locationsData.forEach((location: any) => {
+                locationsMap.set(location.id, { ...location, type: 'location', children: [] });
+            });
+
+            assetsData.forEach((asset: any) => {
+                assetsMap.set(asset.id, { ...asset, type: 'asset', children: [] });
+            });
+
+            const root: TreeNode[] = [];
+
+            locationsMap.forEach((item) => {
+                if (item.parentId) {
+                    const parent = locationsMap.get(item.parentId);
+                    if (parent) parent.children.push(item);
+                } else {
+                    root.push(item);
+                }
+            });
+
+            assetsMap.forEach((item) => {
+                if (!item.locationId && !item.parentId) {
+                    root.push(item);
+                } else if (item.locationId) {
+                    const parent = locationsMap.get(item.locationId);
+                    if (parent) parent.children.push(item);
+                } else if (item.parentId) {
+                    const parent = assetsMap.get(item.parentId);
+                    if (parent) parent.children.push(item);
+                }
+            });
+
+            return root;
+        } catch (error) {
+            console.error('Error fetching company data:', error);
+            throw error;
+        }
+    }, []);
 
     useEffect(() => {
         if (company) {
@@ -31,18 +86,9 @@ export default function HomePage() {
                 setFilteredData(data);
             }).catch(console.error);
         }
-    }, [company]);
+    }, [company, fetchCompanyData]);
 
-    useEffect(() => {
-        if (!filterStatus && !searchTerms) {
-            setFilteredData(treeData);
-        } else {
-            const filteredNodes = applyFilters(treeData);
-            setFilteredData(filteredNodes);
-        }
-    }, [filterStatus, searchTerms, treeData]);
-
-    const applyFilters = (nodes: TreeNode[]): TreeNode[] => {
+    const applyFilters = useCallback((nodes: TreeNode[]): TreeNode[] => {
         const nodeMatchesFilters = (node: TreeNode) => {
             const nameMatch = node.name.toLowerCase().includes(searchTerms.toLowerCase());
             const energyMatch = filterStatus !== 'energy' || ('sensorType' in node && node.sensorType === 'energy');
@@ -68,7 +114,26 @@ export default function HomePage() {
             }
             return acc;
         }, []);
-    };
+    }, [filterStatus, searchTerms]);
+
+    useEffect(() => {
+        if (!filterStatus && !searchTerms) {
+            setFilteredData(treeData);
+        } else {
+            const filteredNodes = applyFilters(treeData);
+            setFilteredData(filteredNodes);
+        }
+    }, [filterStatus, searchTerms, treeData, applyFilters]);
+
+    const memoizedTree = useMemo(() => (
+        <Tree
+            data={filteredData}
+            filters={{
+                status: filterStatus,
+                search: searchTerms
+            }}
+        />
+    ), [filteredData, filterStatus, searchTerms]);
 
     if (!company) {
         return (
@@ -80,27 +145,47 @@ export default function HomePage() {
 
     return (
         <div className="border border-gray-500 rounded-md h-full p-4 bg-white flex flex-col">
-            <FilterBar
-                companyName={company.name}
-                filterStatus={filterStatus}
-                setFilterStatus={setFilterStatus}
-            />
-            <div className="flex space-x-4 flex-1 min-h-0 max-h-[760px]">
-                <div className="border border-gray-500 rounded-md h-ful bg-white lg:max-w-[480px] w-full">
+            <nav className="flex items-center justify-between py-0.5 mb-4">
+                <div className="flex gap-2 items-center text-sm text-neutral-400">
+                    <a href="#" className="text-black text-xl font-semibold">Ativos</a>
+                    <span>/</span>
+                    <span>{company.name}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                    <Button
+                        variant="outline"
+                        icon={<EnergyIcon {...(filterStatus === 'energy' && { fill: "#fff" })} />}
+                        size={'lg'}
+                        onClick={() => setFilterStatus(filterStatus === 'energy' ? null : 'energy')}
+                        active={filterStatus === 'energy'}
+                    >
+                        Sensor de Energia
+                    </Button>
+                    <Button
+                        variant="outline"
+                        icon={<CriticalIcon {...(filterStatus === 'alert' && { fill: "#fff" })} />}
+                        size={'lg'}
+                        onClick={() => setFilterStatus(filterStatus === 'alert' ? null : 'alert')}
+                        active={filterStatus === 'alert'}
+                    >
+                        Crítico
+                    </Button>
+                </div>
+            </nav>
 
+            <div className="flex space-x-4 flex-1 min-h-0 max-h-[760px]">
+                <div className="border border-gray-500 rounded-md h-full bg-white lg:max-w-[480px] w-full">
                     <div className='border-b bg-transparent border-gray-300'>
-                        <input className='bg-transparent p-2 w-full ' type='text' placeholder='Buscar Ativo ou Local' onChange={handleSearch} />
-                    </div>
-                    <div className="p-4">
-                        <Tree
-                            data={filteredData}
-                            filters={{
-                                status: filterStatus,
-                                search: searchTerms
-                            }}
+                        <input
+                            className='bg-transparent p-2 w-full'
+                            type='text'
+                            placeholder='Buscar Ativo ou Local'
+                            onChange={(e) => handleSearch(e.target.value)}
                         />
                     </div>
-
+                    <div className="p-4">
+                        {memoizedTree}
+                    </div>
                 </div>
                 <div className="border border-gray-500 rounded-md h-full p-4 bg-white w-full">
                     <AssetDetails />
@@ -108,63 +193,4 @@ export default function HomePage() {
             </div>
         </div>
     );
-}
-
-
-
-async function fetchCompanyData(companyId: string): Promise<TreeNode[]> {
-    try {
-        const [assetsResponse, locationsResponse] = await Promise.all([
-            api(`/companies/${companyId}/assets`),
-            api(`/companies/${companyId}/locations`)
-        ]);
-
-        if (!assetsResponse.ok || !locationsResponse.ok) {
-            throw new Error('Failed to fetch company data');
-        }
-
-        const [assetsData, locationsData] = await Promise.all([
-            assetsResponse.json(),
-            locationsResponse.json()
-        ]);
-
-        const locationsMap = new Map<string, LocationNode>();
-        const assetsMap = new Map<string, AssetNode>();
-
-        for (const location of locationsData) {
-            locationsMap.set(location.id, { ...location, type: 'location', children: [] });
-        }
-
-        for (const asset of assetsData) {
-            assetsMap.set(asset.id, { ...asset, type: 'asset', children: [] });
-        }
-
-        const root: TreeNode[] = [];
-
-        for (const [_, item] of locationsMap) {
-            if (item.parentId) {
-                const parent = locationsMap.get(item.parentId);
-                if (parent) parent.children.push(item);
-            } else {
-                root.push(item);
-            }
-        }
-
-        for (const [_, item] of assetsMap) {
-            if (!item.locationId && !item.parentId) {
-                root.push(item);
-            } else if (item.locationId) {
-                const parent = locationsMap.get(item.locationId);
-                if (parent) parent.children.push(item);
-            } else if (item.parentId) {
-                const parent = assetsMap.get(item.parentId);
-                if (parent) parent.children.push(item);
-            }
-        }
-
-        return root;
-    } catch (error) {
-        console.error('Error fetching company data:', error);
-        throw error;
-    }
 }

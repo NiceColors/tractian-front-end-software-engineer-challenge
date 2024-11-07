@@ -21,9 +21,10 @@ export const Button = ({
 }: ButtonProps) => {
     const buttonClasses = clsx(
         "flex items-center justify-center gap-2 px-4 rounded-md font-semibold",
-        "hover:bg-blue-light transition-colors duration-200",
+        "hover:bg-blue-light transition-colors duration-100",
         {
             "border border-gray-500 bg-transparent text-gray-600": variant === "outline" && !active,
+            " border": variant === "outline",
             "text-slate-50": variant === "solid",
             "bg-blue-500 text-white": active,
             "bg-blue-900": !active,
