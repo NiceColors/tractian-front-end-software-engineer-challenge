@@ -23,8 +23,19 @@ export default function HomePage() {
 
     const handleSearch = useCallback((value: string) => setSearchTerms(value), []);
 
+
+    const resetStates = () => {
+        setTreeData([]);
+        setFilteredData([]);
+        setFilterStatus(null);
+        setSearchTerms('');
+    }
+
     useEffect(() => {
         if (company) {
+
+            resetStates();
+
             fetchCompanyData(company.id).then(data => {
                 setTreeData(data);
                 setFilteredData(data);
@@ -117,6 +128,7 @@ export default function HomePage() {
                     <div className='border-b bg-transparent border-gray-300'>
                         <label htmlFor="search-input" className="sr-only">Buscar Ativo ou Local</label>
                         <input
+                            value={searchTerms}
                             id="search-input"
                             className='bg-transparent p-2 w-full'
                             type='text'
