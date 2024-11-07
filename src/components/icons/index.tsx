@@ -12,9 +12,9 @@ export const ChevronDown: React.FC<IconProps> = ({ size = 25, ...props }) => (
         viewBox={`0 0 25 25`}
         fill={props.fill || "none"}
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         {...props}
     >
         <path d="m6 9 6 6 6-6" />
@@ -29,9 +29,9 @@ export const ChevronRight: React.FC<IconProps> = ({ size = 25, ...props }) => (
         viewBox={`0 0 25 25`}
         fill={props.fill || "none"}
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         {...props}
     >
         <path d="m9 18 6-6-6-6" />
@@ -84,9 +84,9 @@ export const ComponentIcon: React.FC<IconProps> = ({ size = 22, ...props }) => (
         viewBox="0 0 24 24"
         fill="none"
         stroke="#2188FF"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         {...props}
     >
         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
