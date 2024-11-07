@@ -2,16 +2,17 @@
 
 ## Visão Geral
 
-Este projeto implementa uma aplicação de visualização em árvore para ativos industriais, permitindo aos usuários explorar e filtrar uma hierarquia complexa de locais, ativos e componentes. A aplicação foi desenvolvida como parte de um desafio de engenharia de software front-end, focando em performance, usabilidade e design responsivo.
+Aplicação de visualização em árvore para ativos industriais, permitindo aos usuários explorar e filtrar uma hierarquia complexa de locais, ativos e componentes 
 
 ## Funcionalidades
 
 1. **Visualização em Árvore**:
 
-   - Exibe uma estrutura hierárquica de locais, ativos e componentes.
-   - Utiliza ícones distintos para diferentes tipos de nós (locais, ativos, componentes).
+   - Exibe uma estrutura hierárquica de locais, componentes e ativos.
+   - Ícones distintos para diferentes tipos de nós (locais, ativos, componentes).
+   - Seleção de Ativos
 
-2. **Filtragem Avançada**:
+2. **Filtragem**:
 
    - Busca por texto: Permite aos usuários procurar por nomes específicos de componentes, ativos ou locais.
    - Filtro de sensores de energia: Isola sensores de energia na árvore.
@@ -23,11 +24,25 @@ Este projeto implementa uma aplicação de visualização em árvore para ativos
 
 4. **Acessibilidade**:
 
-    - Implementa práticas de acessibilidade para garantir que a aplicação seja utilizável por pessoas com deficiências.
+    - Implementa boas práticas de acessibilidade.
     - Suporte a navegação por teclado e leitores de tela.
 
 5. **Otimização de Performance**:
-   - Implementa renderização eficiente para grandes conjuntos de dados usando `react-window` `memoization` e `code splitting`.
+   - Renderização eficiente para grandes conjuntos de dados usando técnicas como `virtualização` `memoization` e `code splitting`.
+
+## Melhorias Futuras
+
+Algumas áreas que poderiam ser melhoradas com mais tempo / detalhes sobre o requisito:
+
+1. Implementação de testes e-2-e e unitários.
+2. Adição de mais opções de filtragem e ordenação.
+3. Implementação de cache para melhorar o tempo de carregamento de dados frequentemente acessados.
+
+## Demonstração
+https://github.com/user-attachments/assets/d28ad805-9205-42a0-ac63-46a6967a266a
+
+## Contato
+Email: victorbtst77@gmail.com
 
 ## Tecnologias Utilizadas
 
@@ -35,7 +50,6 @@ Este projeto implementa uma aplicação de visualização em árvore para ativos
 - TypeScript
 - `react-window` para virtualização de lista
 - Context API do React para gerenciamento de estado
-- Tailwind CSS para estilização
 
 ## Estrutura do Projeto
 
@@ -79,14 +93,6 @@ O projeto é composto principalmente por dois componentes principais:
 
 4. Abra o navegador e acesse `http://localhost:5173/`
 
-## Melhorias Futuras
 
-Algumas áreas que poderiam ser melhoradas com mais tempo / detalhes sobre o requisito:
 
-1. Implementação de testes e-2-e e unitários.
-2. Adição de mais opções de filtragem e ordenação.
-3. Implementação de cache para melhorar o tempo de carregamento de dados frequentemente acessados.
 
-## Demonstração
-
-## Contato
