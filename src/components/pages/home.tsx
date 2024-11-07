@@ -1,21 +1,24 @@
+import AssetDetails from '@/components/assets-details';
+import { CriticalIcon, EnergyIcon } from '@/components/icons';
+import { Button } from '@/components/ui/buttons';
+import { LoadingPage } from '@/components/ui/loading';
 import { useCompany } from "@/contexts/company-context";
-import { api } from '@/data/api';
-import { AssetNode, LocationNode, TreeNode } from '@/types/tree';
+import { fetchCompanyData } from "@/services/fetch-company";
+import { TreeNode } from '@/types/tree';
 import { debounce } from 'lodash';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import AssetDetails from '../assets-details';
-import { CriticalIcon, EnergyIcon } from '../icons';
-import { Button } from '../ui/buttons';
-import { LoadingPage } from '../ui/loading';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 const Tree = lazy(() => import('@/components/ui/tree'));
 
 export default function HomePage() {
 
     const { company } = useCompany();
+
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
     const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
     const [filterStatus, setFilterStatus] = useState<'energy' | 'alert' | null>(null);
     const [searchTerms, setSearchTerms] = useState<string>('');
+
+    const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
 
     const handleSearch = useCallback(
         debounce((value: string) => {
@@ -24,63 +27,6 @@ export default function HomePage() {
         []
     );
 
-    const fetchCompanyData = useCallback(async (companyId: string): Promise<TreeNode[]> => {
-        try {
-            const [assetsResponse, locationsResponse] = await Promise.all([
-                api(`/companies/${companyId}/assets`),
-                api(`/companies/${companyId}/locations`)
-            ]);
-
-            if (!assetsResponse.ok || !locationsResponse.ok) {
-                throw new Error('Failed to fetch company data');
-            }
-
-            const [assetsData, locationsData] = await Promise.all([
-                assetsResponse.json(),
-                locationsResponse.json()
-            ]);
-
-            const locationsMap = new Map<string, LocationNode>();
-            const assetsMap = new Map<string, AssetNode>();
-
-            locationsData.forEach((location: any) => {
-                locationsMap.set(location.id, { ...location, type: 'location', children: [] });
-            });
-
-            assetsData.forEach((asset: any) => {
-                assetsMap.set(asset.id, { ...asset, type: 'asset', children: [] });
-            });
-
-            const root: TreeNode[] = [];
-
-            locationsMap.forEach((item) => {
-                if (item.parentId) {
-                    const parent = locationsMap.get(item.parentId);
-                    if (parent) parent.children.push(item);
-                } else {
-                    root.push(item);
-                }
-            });
-
-            assetsMap.forEach((item) => {
-                if (!item.locationId && !item.parentId) {
-                    root.push(item);
-                } else if (item.locationId) {
-                    const parent = locationsMap.get(item.locationId);
-                    if (parent) parent.children.push(item);
-                } else if (item.parentId) {
-                    const parent = assetsMap.get(item.parentId);
-                    if (parent) parent.children.push(item);
-                }
-            });
-
-            return root;
-        } catch (error) {
-            console.error('Error fetching company data:', error);
-            throw error;
-        }
-    }, []);
-
     useEffect(() => {
         if (company) {
             fetchCompanyData(company.id).then(data => {
@@ -88,7 +34,7 @@ export default function HomePage() {
                 setFilteredData(data);
             }).catch(console.error);
         }
-    }, [company, fetchCompanyData]);
+    }, [company]);
 
     const applyFilters = useCallback((nodes: TreeNode[]): TreeNode[] => {
         const nodeMatchesFilters = (node: TreeNode) => {
@@ -127,15 +73,6 @@ export default function HomePage() {
         }
     }, [filterStatus, searchTerms, treeData, applyFilters]);
 
-    const memoizedTree = useMemo(() => (
-        <Tree
-            data={filteredData}
-            filters={{
-                status: filterStatus,
-                search: searchTerms
-            }}
-        />
-    ), [filteredData, filterStatus, searchTerms]);
 
     if (!company) {
         return (
@@ -194,12 +131,19 @@ export default function HomePage() {
                     </div>
                     <div className="p-4" role="tree" aria-label="Árvore de ativos">
                         <Suspense fallback={<LoadingPage />}>
-                            {memoizedTree}
+                            <Tree
+                                data={filteredData}
+                                filters={{
+                                    status: filterStatus,
+                                    search: searchTerms
+                                }}
+                                onSelectNode={setSelectedNode}
+                            />
                         </Suspense>
                     </div>
                 </div>
-                <div className="border border-gray-500 rounded-md h-full p-4 bg-white w-full">
-                    <AssetDetails />
+                <div className="border border-gray-500 rounded-md h-full bg-white w-full">
+                    <AssetDetails node={selectedNode} />
                 </div>
             </div>
         </div>

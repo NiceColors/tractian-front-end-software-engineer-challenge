@@ -8,7 +8,7 @@ import {
 } from "@/components/icons";
 import { TreeNode, TreeProps } from "@/types/tree";
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 
 type FlattenedNode = TreeNode & {
@@ -18,30 +18,83 @@ type FlattenedNode = TreeNode & {
   parentLastChildren: boolean[];
 };
 
-export default function Tree({ data, filters, onSelectNode }: TreeProps) {
+
+const nodeMatchesFilters = (node: TreeNode, filters: TreeProps['filters']): boolean => {
+  const nameMatch = node.name
+    .toLowerCase()
+    .includes(filters.search.toLowerCase());
+  const energyMatch =
+    filters.status !== "energy" ||
+    ("sensorType" in node && node.sensorType === "energy");
+  const criticalMatch =
+    filters.status !== "alert" ||
+    ("status" in node && node.status === "alert");
+  return nameMatch && energyMatch && criticalMatch;
+};
+
+const hasMatchingDescendant = (node: TreeNode, filters: TreeProps['filters']): boolean => {
+  if (nodeMatchesFilters(node, filters)) return true;
+  if ("children" in node) {
+    return node.children.some((child) => hasMatchingDescendant(child, filters));
+  }
+  return false;
+};
+
+const filterTree = (nodes: TreeNode[], filters: TreeProps['filters']): TreeNode[] => {
+  return nodes.reduce<TreeNode[]>((acc, node) => {
+    if (hasMatchingDescendant(node, filters)) {
+      const filteredNode = {
+        ...node,
+        children: "children" in node ? filterTree(node.children, filters) : [],
+      };
+      acc.push(filteredNode);
+    }
+    return acc;
+  }, []);
+};
+
+const flattenTree = (
+  nodes: TreeNode[],
+  expandedNodes: Set<string>,
+  depth = 0,
+  parentLastChildren: boolean[] = []
+): FlattenedNode[] => {
+  return nodes.reduce<FlattenedNode[]>((acc, node, index) => {
+    const isLast = index === nodes.length - 1;
+    const isFirst = index === 0;
+
+    const flatNode: FlattenedNode = {
+      ...node,
+      depth,
+      isLastChild: isLast,
+      isFirstChild: isFirst,
+      parentLastChildren: [...parentLastChildren, isLast],
+    };
+
+    acc.push(flatNode);
+
+    if ("children" in node && node.children && expandedNodes.has(node.id)) {
+      acc.push(
+        ...flattenTree(node.children, expandedNodes, depth + 1, [
+          ...parentLastChildren,
+          isLast,
+        ])
+      );
+    }
+
+    return acc;
+  }, []);
+};
+
+
+
+export default memo(function Tree({ data, filters, onSelectNode }: TreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [flattenedData, setFlattenedData] = useState<FlattenedNode[]>([]);
   const listRef = useRef<List>(null);
 
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
 
-  useEffect(() => {
-    if (filters.search || filters.status) {
-      const allNodeIds = new Set<string>();
-      const addNodeIds = (nodes: TreeNode[]) => {
-        nodes.forEach((node) => {
-          allNodeIds.add(node.id);
-          if ("children" in node && node.children) {
-            addNodeIds(node.children);
-          }
-        });
-      };
-      addNodeIds(data);
-      setExpandedNodes(allNodeIds);
-    } else {
-      setExpandedNodes(new Set());
-    }
-  }, [filters, data]);
 
   useEffect(() => {
     const filteredData = filterTree(data);
@@ -234,8 +287,17 @@ export default function Tree({ data, filters, onSelectNode }: TreeProps) {
                 selectedNode?.id === node.id && isAssetWithSensorType,
             })}
             onClick={() => {
-              onSelectNode && onSelectNode(node);
-              setSelectedNode(prev => prev?.id === node.id ? null : node)
+              if (isAssetWithSensorType) {
+                onSelectNode && onSelectNode(node);
+                setSelectedNode(prev => {
+                  if (prev?.id === node.id) {
+                    onSelectNode && onSelectNode(null);
+                    return null;
+                  }
+                  return node;
+                })
+
+              }
             }}
           >
             {isAssetWithSensorType ? (
@@ -263,6 +325,25 @@ export default function Tree({ data, filters, onSelectNode }: TreeProps) {
     );
   };
 
+  useEffect(() => {
+    if (filters.search || filters.status) {
+      const allNodeIds = new Set<string>();
+      const addNodeIds = (nodes: TreeNode[]) => {
+        nodes.forEach((node) => {
+          allNodeIds.add(node.id);
+          if ("children" in node && node.children) {
+            addNodeIds(node.children);
+          }
+        });
+      };
+      addNodeIds(data);
+      setExpandedNodes(allNodeIds);
+    } else {
+      setExpandedNodes(new Set());
+    }
+  }, [data]);
+
+
   return (
     <div role="tree" aria-label="Árvore de ativos">
       <List
@@ -277,4 +358,4 @@ export default function Tree({ data, filters, onSelectNode }: TreeProps) {
       </List>
     </div>
   );
-}
+})

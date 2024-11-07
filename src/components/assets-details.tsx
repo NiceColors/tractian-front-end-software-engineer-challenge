@@ -1,7 +1,28 @@
-export default function AssetDetails() {
+import { TreeNode } from "@/types/tree";
+
+export default function AssetDetails({ node }: { node?: TreeNode | null }) {
+
+    if (!node) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-gray-600">Por favor, selecione um componente para ver os detalhes.</p>
+            </div>
+        );
+    }
+
+
+
+
     return (
-        <div className="p-6">
-            <div className="grid lg:grid-cols-[auto,1fr] gap-6">
+        <div>
+
+            <div className="border-b border-grey-300 py-4 p-8">
+                <h2 className="text-2xl font-bold text-gray-900">
+                    {node?.name}
+                </h2>
+            </div>
+
+            <div className="grid lg:grid-cols-[auto,1fr] gap-6 p-8">
                 <div className="flex justify-center border border-gray-300 rounded-lg p-4 ">
                     <img
                         src="/motor.png"
@@ -12,7 +33,9 @@ export default function AssetDetails() {
                 <div className="space-y-6">
                     <div>
                         <h3 className="text-sm font-medium text-gray-900 mb-1">Tipo de Equipamento</h3>
-                        <p className="text-lg text-gray-600">Motor Elétrico (Trifásico)</p>
+                        <p className="text-lg text-gray-600">
+                            Motor Elétrico (Trifásico)
+                        </p>
                     </div>
                     <div>
                         <h3 className="text-sm font-medium text-gray-900 mb-1">Responsáveis</h3>
