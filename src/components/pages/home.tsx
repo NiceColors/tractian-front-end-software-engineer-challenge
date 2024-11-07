@@ -90,7 +90,7 @@ export default function HomePage() {
     }
 
     return (
-        <div className="border border-gray-500 rounded-md flex-1 min-h-0 p-4 bg-white flex flex-col">
+        <div className="border border-gray-500 rounded-md flex flex-col h-full p-4 bg-white  ">
             <nav className="flex items-center justify-between py-0.5 mb-4 " aria-label="Filtros e navegação">
                 <div className="flex gap-2 items-center text-sm text-neutral-400">
                     <a href="#" className="text-black text-xl font-semibold">Ativos</a>
@@ -123,7 +123,7 @@ export default function HomePage() {
                 </div>
             </nav>
 
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 h-full">
                 <div className="border border-gray-500 rounded-md h-full bg-white lg:max-w-[480px] w-full">
                     <div className='border-b bg-transparent border-gray-300'>
                         <label htmlFor="search-input" className="sr-only">Buscar Ativo ou Local</label>
@@ -150,7 +150,7 @@ export default function HomePage() {
                         </Suspense>
                     </div>
                 </div>
-                <div className="border border-gray-500 rounded-md overflow-hidden bg-white w-full">
+                <div className="border border-gray-500 rounded-md overflow-hidden bg-white w-full ">
                     <AssetDetails node={selectedNode} />
                 </div>
             </div>
