@@ -284,7 +284,7 @@ export default memo(function Tree({ data, filters, onSelectNode }: TreeProps) {
             <span className="ml-4" aria-hidden="true" />
           )}
           <span
-            className={clsx("flex items-center justify-start w-full", {
+            className={clsx("flex items-center justify-start sm:w-full pr-2", {
               "group cursor-pointer rounded-sm":
                 isAssetWithSensorType,
               "bg-blue-500 text-white cursor-pointer rounded-sm stroke-white relative right-1":

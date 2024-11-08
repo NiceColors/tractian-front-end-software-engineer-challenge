@@ -4,14 +4,11 @@ export default function AssetDetails({ node }: { node?: TreeNode | null }) {
 
     if (!node) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <p className="text-gray-600">Por favor, selecione um componente para ver os detalhes.</p>
+            <div className="flex items-center justify-center h-full px-4 py-4">
+                <p className="text-gray-600 text-center">Por favor, selecione um componente para ver os detalhes.</p>
             </div>
         );
     }
-
-
-
 
     return (
         <div>
@@ -22,7 +19,7 @@ export default function AssetDetails({ node }: { node?: TreeNode | null }) {
                 </h2>
             </div>
 
-            <div className="grid lg:grid-cols-[auto,1fr] gap-6 p-8">
+            <div className="grid lg:grid-cols-[auto,1fr] gap-6 sm:p-8 p-3">
                 <div className="flex justify-center border border-gray-300 rounded-lg p-4 ">
                     <img
                         src="/motor.png"

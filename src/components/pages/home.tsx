@@ -91,14 +91,14 @@ export default function HomePage() {
     }
 
     return (
-        <div className="border border-gray-500 rounded-md flex flex-col h-full p-4 bg-white  ">
-            <nav className="flex items-center justify-between py-0.5 mb-4 " aria-label="Filtros e navegação">
+        <div className="border border-gray-500 rounded-md flex flex-col md:h-full sm:p-4 p-2 bg-white ">
+            <nav className="flex sm:flex-row flex-col sm:items-center justify-between py-0.5 mb-4 " aria-label="Filtros e navegação">
                 <div className="flex gap-2 items-center text-sm text-neutral-400">
                     <a href="#" className="text-black text-xl font-semibold">Ativos</a>
                     <span aria-hidden="true">/</span>
                     <span>{company.name}</span>
                 </div>
-                <div className="flex gap-2 items-center" role="group" aria-label="Filtros de ativos">
+                <div className="flex flex-wrap gap-2 items-center" role="group" aria-label="Filtros de ativos">
                     <Button
                         variant="outline"
                         icon={<EnergyIcon {...(filterStatus === 'energy' && { fill: "#fff" })} />}
@@ -107,6 +107,7 @@ export default function HomePage() {
                         active={filterStatus === 'energy'}
                         aria-pressed={filterStatus === 'energy'}
                         aria-label="Filtrar por sensor de energia"
+                        className='max-sm:w-full'
                     >
                         Sensor de Energia
                     </Button>
@@ -118,13 +119,14 @@ export default function HomePage() {
                         active={filterStatus === 'alert'}
                         aria-pressed={filterStatus === 'alert'}
                         aria-label="Filtrar por status crítico"
+                        className='max-sm:w-full'
                     >
                         Crítico
                     </Button>
                 </div>
             </nav>
 
-            <div className="flex space-x-4 h-full">
+            <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:gap-4 h-full">
                 <div className="border border-gray-500 rounded-md h-full bg-white lg:max-w-[480px] w-full">
                     <div className='border-b bg-transparent border-gray-300'>
                         <label htmlFor="search-input" className="sr-only">Buscar Ativo ou Local</label>
@@ -151,7 +153,7 @@ export default function HomePage() {
                         </Suspense>
                     </div>
                 </div>
-                <div className="border border-gray-500 rounded-md overflow-hidden bg-white w-full ">
+                <div className="border border-gray-500 rounded-md overflow-hidden min-h-0 bg-white w-full">
                     <AssetDetails node={selectedNode} />
                 </div>
             </div>
